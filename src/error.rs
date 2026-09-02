@@ -1,9 +1,12 @@
+//! Errors returned when an integer does not map to an enum variant.
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BetterEnumsError<T> {
     pub(crate) value: T,
 }
 
 impl<T> BetterEnumsError<T> {
+    /// Creates an error containing the value that could not be converted.
     pub fn new(value: T) -> Self {
         BetterEnumsError { value }
     }

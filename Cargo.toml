@@ -2,9 +2,14 @@
 name = "better_enums"
 version = "0.1.0"
 edition = "2024"
+description = "Generate efficient TryFrom implementations for enums with discriminant ranges"
+readme = "README.md"
+license = "MIT"
+keywords = ["enum", "discriminant", "proc-macro", "conversion"]
+categories = ["rust-patterns"]
 
 [dependencies]
-better_enums_derive = { version = "0.1.0", path = "../better_enums_derive" }
+better_enums_derive = { version = "0.1.0" }
 
 [dev-dependencies]
 trybuild = "1.0"
