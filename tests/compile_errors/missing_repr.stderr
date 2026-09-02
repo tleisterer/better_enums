@@ -1,0 +1,5 @@
+error: better_enums: repr attribute missing
+ --> tests/compile_errors/missing_repr.rs:4:6
+  |
+4 | enum MissingRepr {
+  |      ^^^^^^^^^^^

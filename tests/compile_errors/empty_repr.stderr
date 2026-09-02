@@ -1,0 +1,5 @@
+error: better_enums: repr is missing
+ --> tests/compile_errors/empty_repr.rs:4:1
+  |
+4 | #[repr()]
+  | ^^^^^^^^^

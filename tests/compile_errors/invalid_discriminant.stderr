@@ -1,0 +1,5 @@
+error: better_enums: expected an integer literal
+ --> tests/compile_errors/invalid_discriminant.rs:6:13
+  |
+6 |     Value = "value",
+  |             ^^^^^^^

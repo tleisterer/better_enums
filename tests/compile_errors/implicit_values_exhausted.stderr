@@ -1,0 +1,5 @@
+error: better_enums: no implicit value remains in repr range
+ --> tests/compile_errors/implicit_values_exhausted.rs:7:5
+  |
+7 |     Next,
+  |     ^^^^

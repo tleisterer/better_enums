@@ -1,0 +1,5 @@
+error: better_enums: value is outside the repr range
+ --> tests/compile_errors/out_of_range.rs:6:13
+  |
+6 |     Value = 256,
+  |             ^^^

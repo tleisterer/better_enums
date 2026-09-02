@@ -1,0 +1,5 @@
+error: better_enums: value is outside the repr range
+ --> tests/compile_errors/unsigned_literal_too_large.rs:6:13
+  |
+6 |     Value = 340282366920938463463374607431768211456,
+  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

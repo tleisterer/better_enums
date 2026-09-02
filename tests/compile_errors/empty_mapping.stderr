@@ -1,0 +1,5 @@
+error: better_enums: a variant must map to at least one value
+ --> tests/compile_errors/empty_mapping.rs:6:5
+  |
+6 |     Value = [],
+  |     ^^^^^^^^^^

@@ -1,0 +1,5 @@
+error: better_enums: enum cannot be generic
+ --> tests/compile_errors/generic.rs:5:13
+  |
+5 | enum Generic<T> {
+  |             ^^^

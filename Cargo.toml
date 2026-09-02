@@ -1,0 +1,10 @@
+[package]
+name = "better_enums"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+better_enums_derive = { version = "0.1.0", path = "../better_enums_derive" }
+
+[dev-dependencies]
+trybuild = "1.0"

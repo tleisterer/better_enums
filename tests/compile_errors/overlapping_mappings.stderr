@@ -1,0 +1,5 @@
+error: better_enums: mappings for Value overlap or duplicate each other
+ --> tests/compile_errors/overlapping_mappings.rs:6:5
+  |
+6 |     Value = [1, 1],
+  |     ^^^^^

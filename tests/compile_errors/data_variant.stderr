@@ -1,0 +1,5 @@
+error: better_enums: variant cannot have additional data
+ --> tests/compile_errors/data_variant.rs:6:5
+  |
+6 |     Value(u8),
+  |     ^^^^^^^^^

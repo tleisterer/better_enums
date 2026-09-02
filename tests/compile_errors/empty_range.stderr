@@ -1,0 +1,5 @@
+error: better_enums: range is empty
+ --> tests/compile_errors/empty_range.rs:6:13
+  |
+6 |     Value = 10..10,
+  |             ^^^^^^

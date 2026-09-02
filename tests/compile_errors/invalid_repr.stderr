@@ -1,0 +1,5 @@
+error: better_enums: repr must be an integer type
+ --> tests/compile_errors/invalid_repr.rs:4:8
+  |
+4 | #[repr(bool)]
+  |        ^^^^
