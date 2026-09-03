@@ -5,6 +5,7 @@ edition = "2024"
 description = "Generate efficient TryFrom implementations for enums with discriminant ranges"
 readme = "README.md"
 license = "MIT"
+repository = "https://github.com/tleisterer/better_enums.git"
 keywords = ["enum", "discriminant", "proc-macro", "conversion"]
 categories = ["rust-patterns"]
 

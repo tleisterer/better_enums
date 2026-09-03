@@ -50,12 +50,3 @@ must not overlap. Generic enums are not supported.
 
 Failed conversions return `BetterEnumsError<T>`, which retains the original
 value and displays as `"<value> is not a valid discriminant"`.
-
-## License
-
-Licensed under either of:
-
-* Apache License, Version 2.0
-* MIT License
-
-at your option.
