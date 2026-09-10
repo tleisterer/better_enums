@@ -10,7 +10,7 @@ keywords = ["enum", "discriminant", "proc-macro", "conversion"]
 categories = ["rust-patterns"]
 
 [dependencies]
-better_enums_derive = { version = "0.1.0" }
+better_enums_derive = { version = "0.1.0", path = "../better_enums_derive" }
 
 [dev-dependencies]
 trybuild = "1.0"

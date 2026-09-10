@@ -1,20 +1,17 @@
 //! Errors returned when an integer does not map to an enum variant.
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct BetterEnumsError<T> {
-    pub(crate) value: T,
-}
-
-impl<T> BetterEnumsError<T> {
-    /// Creates an error containing the value that could not be converted.
-    pub fn new(value: T) -> Self {
-        BetterEnumsError { value }
-    }
+pub enum BetterEnumsError<T> {
+    Discriminant(T),
+    Bit(T),
 }
 
 impl<T: std::fmt::Display> std::fmt::Display for BetterEnumsError<T> {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "{} is not a valid discriminant", self.value)
+        match self {
+            Self::Bit(t) => write!(formatter, "{} contains an invalid bit", t),
+            Self::Discriminant(t) => write!(formatter, "{} is not a valid discriminant", t),
+        }
     }
 }
 
