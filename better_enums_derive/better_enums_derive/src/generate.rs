@@ -52,7 +52,7 @@ pub fn generate_code(enum_name: &Ident, repr: &Ident, variants: &[VariantMapping
             type Error = #krate::error::BetterEnumsError<#repr>;
             fn try_from(value: #repr) -> Result<Self, Self::Error> {
                 #(#arms)*
-                Err(Self::Error::new(value))
+                Err(Self::Error::Discriminant(value))
             }
         }
     }
