@@ -14,8 +14,8 @@ pub fn extract_repr(attrs: &[Attribute], enum_name: &Ident) -> Result<Ident, Syn
                     SynError::new_spanned(&meta.path, "better_enums: repr must be an integer type")
                 })?;
                 match ty.to_string().as_str() {
-                    "i8" | "i16" | "i32" | "i64" | "i128" | "isize" | "u8" | "u16"
-                    | "u32" | "u64" | "u128" | "usize" => {
+                    "i8" | "i16" | "i32" | "i64" | "i128" | "isize" | "u8" | "u16" | "u32"
+                    | "u64" | "u128" | "usize" => {
                         repr = Some(ty.clone());
                         Ok(())
                     }
@@ -25,7 +25,8 @@ pub fn extract_repr(attrs: &[Attribute], enum_name: &Ident) -> Result<Ident, Syn
                     )),
                 }
             })?;
-            return repr.ok_or_else(|| SynError::new_spanned(attr, "better_enums: repr is missing"));
+            return repr
+                .ok_or_else(|| SynError::new_spanned(attr, "better_enums: repr is missing"));
         }
     }
 
@@ -239,7 +240,10 @@ fn literal_for(value: Number) -> Expr {
     syn::parse_str(&text).expect("validated discriminant should parse")
 }
 
-pub fn collect_variants(input: &mut ItemEnum, bounds: Domain) -> Result<Vec<VariantMapping>, SynError> {
+pub fn collect_variants(
+    input: &mut ItemEnum,
+    bounds: Domain,
+) -> Result<Vec<VariantMapping>, SynError> {
     let mut next = Some(if bounds.unsigned {
         Number::Unsigned(0)
     } else {
@@ -299,30 +303,3 @@ pub fn collect_variants(input: &mut ItemEnum, bounds: Domain) -> Result<Vec<Vari
     Ok(result)
 }
 
-pub fn validate_overlaps(variants: &[VariantMapping]) -> Result<(), SynError> {
-    for (index, current) in variants.iter().enumerate() {
-        if !current.valid() {
-            return Err(SynError::new(
-                current.span,
-                format!(
-                    "better_enums: mappings for {} overlap or duplicate each other",
-                    current.name
-                ),
-            ));
-        }
-
-        for previous in &variants[..index] {
-            if current.overlaps(previous) {
-                return Err(SynError::new(
-                    current.span,
-                    format!(
-                        "better_enums: mapping for {} overlaps mapping for {}",
-                        current.name, previous.name
-                    ),
-                ));
-            }
-        }
-    }
-
-    Ok(())
-}

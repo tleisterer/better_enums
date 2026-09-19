@@ -74,13 +74,22 @@ fn arrays_and_implicit_values_work() {
 #[test]
 fn implicit_values_start_at_zero() {
     assert!(matches!(StartsAtZero::try_from(0), Ok(StartsAtZero::First)));
-    assert!(matches!(StartsAtZero::try_from(1), Ok(StartsAtZero::Second)));
+    assert!(matches!(
+        StartsAtZero::try_from(1),
+        Ok(StartsAtZero::Second)
+    ));
 }
 
 #[test]
 fn disjoint_ranges_can_be_declared_in_reverse_order() {
-    assert!(matches!(ReverseDisjointRanges::try_from(1), Ok(ReverseDisjointRanges::Lower)));
-    assert!(matches!(ReverseDisjointRanges::try_from(5), Ok(ReverseDisjointRanges::Higher)));
+    assert!(matches!(
+        ReverseDisjointRanges::try_from(1),
+        Ok(ReverseDisjointRanges::Lower)
+    ));
+    assert!(matches!(
+        ReverseDisjointRanges::try_from(5),
+        Ok(ReverseDisjointRanges::Higher)
+    ));
 }
 
 #[test]
