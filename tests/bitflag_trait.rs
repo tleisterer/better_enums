@@ -17,7 +17,7 @@ enum Flag {
 }
 
 impl BitOr for Flag {
-    type Output = Bitflags<Flag>;
+    type Output = Bitflags<Self>;
     fn bitor(self, rhs: Self) -> Self::Output {
         Self::from_bits(self.value() | rhs.value())
     }
@@ -30,7 +30,7 @@ impl Bit for Flag {
     const EMPTY: Self::Repr = 0b0000_0000;
 
     fn value(&self) -> Self::Repr {
-        *self as u8
+        *self as Self::Repr
     }
 }
 

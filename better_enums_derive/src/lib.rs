@@ -1,18 +1,18 @@
 mod model;
-mod parse;
 mod settings;
+mod utils;
 
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{ItemEnum, parse_macro_input};
 
-use crate::parse::{domain, extract_repr};
-use crate::settings::{parse_setting, prepare};
+use crate::{
+    model::Domain,
+    settings::{Setting, SettingFactory},
+    utils::extract_repr,
+};
 
-fn better_enums_impl(
-    attr: TokenStream,
-    mut input: ItemEnum,
-) -> Result<TokenStream, syn::Error> {
+fn better_enums_impl(attr: TokenStream, mut input: ItemEnum) -> Result<TokenStream, syn::Error> {
     if input.generics.lt_token.is_some() || input.generics.where_clause.is_some() {
         return Err(syn::Error::new_spanned(
             &input.generics,
@@ -20,12 +20,12 @@ fn better_enums_impl(
         ));
     }
 
-    let setting = parse_setting(attr)?;
+    let setting = SettingFactory::create(attr)?;
     let repr = extract_repr(&input.attrs, &input.ident)?;
-    let bounds = domain(&repr);
-    let variants = prepare(setting.as_ref(), &mut input, bounds)?;
-
+    let bounds = Domain::try_from(&repr)?;
+    let variants = setting.validate(&mut input.variants.iter_mut(), bounds)?;
     let code = setting.generate(&input.ident, &repr, &variants);
+
     Ok(quote! { #input #code })
 }
 

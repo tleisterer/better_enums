@@ -1,28 +1,28 @@
+mod bitflags;
 mod range;
 
 use proc_macro2::TokenStream;
-use syn::{Ident, ItemEnum};
+use syn::{Ident, Variant};
 
-use crate::model::{Domain, VariantMapping};
-use range::RangeSetting;
+use crate::{Domain, settings::range::RangeSetting};
 
 pub(crate) trait Setting {
-    fn validate(&self, variants: &[VariantMapping]) -> Result<(), syn::Error>;
+    type Mapping;
+    fn validate<'a>(
+        &self,
+        variants: impl Iterator<Item = &'a mut Variant>,
+        bounds: Domain,
+    ) -> Result<Vec<Self::Mapping>, syn::Error>;
 
-    fn generate(&self, enum_name: &Ident, repr: &Ident, variants: &[VariantMapping])
-    -> TokenStream;
+    fn generate(&self, enum_name: &Ident, repr: &Ident, variants: &[Self::Mapping]) -> TokenStream;
 }
 
-pub(crate) fn parse_setting(_attributes: TokenStream) -> Result<Box<dyn Setting>, syn::Error> {
-    Ok(Box::new(RangeSetting))
-}
+pub(crate) struct SettingFactory;
 
-pub(crate) fn prepare(
-    setting: &dyn Setting,
-    input: &mut ItemEnum,
-    bounds: Domain,
-) -> Result<Vec<VariantMapping>, syn::Error> {
-    let variants = crate::parse::collect_variants(input, bounds)?;
-    setting.validate(&variants)?;
-    Ok(variants)
+impl SettingFactory {
+    pub(crate) fn create(attr: TokenStream) -> syn::Result<impl Setting> {
+        let _ = attr; // TODO: parse attr to determine which setting to create
+
+        Ok(RangeSetting)
+    }
 }
