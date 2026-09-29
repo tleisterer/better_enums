@@ -1,5 +1,4 @@
-use proc_macro2::Span;
-use syn::{Error as SynError, Expr, ExprRange, Ident, Lit, RangeLimits, UnOp};
+use syn::{Expr, ExprRange, Ident, Lit, RangeLimits, UnOp};
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Number {
@@ -14,7 +13,7 @@ impl Number {
                 Lit::Int(value) => {
                     if unsigned {
                         let number = value.base10_parse::<u128>().map_err(|_| {
-                            SynError::new_spanned(
+                            syn::Error::new_spanned(
                                 expr,
                                 "better_enums: value is outside the repr range",
                             )
@@ -22,7 +21,7 @@ impl Number {
                         Ok(Self::Unsigned(number))
                     } else {
                         let number = value.base10_parse::<i128>().map_err(|_| {
-                            SynError::new_spanned(
+                            syn::Error::new_spanned(
                                 expr,
                                 "better_enums: value is outside the repr range",
                             )
@@ -30,7 +29,7 @@ impl Number {
                         Ok(Self::Signed(number))
                     }
                 }
-                _ => Err(SynError::new_spanned(
+                _ => Err(syn::Error::new_spanned(
                     expr,
                     "better_enums: expected an integer literal",
                 )),
@@ -38,12 +37,13 @@ impl Number {
             Expr::Unary(unary) if matches!(unary.op, UnOp::Neg(_)) => {
                 let value = Self::parse(&unary.expr, true)?;
                 match value {
+                    Self::Signed(_) => unreachable!("Negated values is parsed as signed"),
                     Self::Unsigned(value) if value == (i128::MAX as u128) + 1 => {
                         Ok(Self::Signed(i128::MIN))
                     }
                     Self::Unsigned(value) => i128::try_from(value)
                         .map_err(|_| {
-                            SynError::new_spanned(
+                            syn::Error::new_spanned(
                                 expr,
                                 "better_enums: value is outside the repr range",
                             )
@@ -51,124 +51,149 @@ impl Number {
                         .checked_neg()
                         .map(Self::Signed)
                         .ok_or_else(|| {
-                            SynError::new_spanned(
+                            syn::Error::new_spanned(
                                 expr,
                                 "better_enums: value is outside the repr range",
                             )
                         }),
-                    Self::Signed(_) => unreachable!("Negated values must be parsed as signed"),
                 }
             }
-            _ => Err(SynError::new_spanned(
+            _ => Err(syn::Error::new_spanned(
                 expr,
                 "better_enums: expected an integer literal",
             )),
         }
     }
 
-    pub(crate) fn validate(&self, domain: Domain) -> bool {
-        (domain.unsigned && matches!(self, Self::Unsigned(_)))
-            || (!domain.unsigned && matches!(self, Self::Signed(_)))
-                && *self >= domain.min
-                && *self <= domain.max
+    pub(crate) fn validate(&self, domain: &Domain) -> bool {
+        ((domain.unsigned && matches!(self, Self::Unsigned(_)))
+            || (!domain.unsigned && matches!(self, Self::Signed(_))))
+            && *self >= domain.min
+            && *self <= domain.max
     }
 
     pub(crate) fn into_expr(self) -> Expr {
         let text = match self {
-            Number::Signed(value) => value.to_string(),
-            Number::Unsigned(value) => value.to_string(),
+            Self::Signed(value) => value.to_string(),
+            Self::Unsigned(value) => value.to_string(),
         };
         syn::parse_str(&text).expect("validated discriminant should parse")
     }
+
+    /// Warning: this function will panic if called on a signed value.
+    pub(crate) fn is_power_of_two(&self) -> bool {
+        match self {
+            Self::Signed(_) => panic!("better_enums: is_power_of_two called on signed value"),
+            Self::Unsigned(value) => value.is_power_of_two(),
+        }
+    }
+
+    /// Returns the value as a u128, panicking if the value is signed.
+    pub(crate) fn get_unsigned(&self) -> u128 {
+        match self {
+            Self::Signed(_) => panic!("better_enums: unsigned called on signed value"),
+            Self::Unsigned(value) => *value,
+        }
+    }
+
+    #[allow(unused)]
+    /// Returns the value as a i128, panicking if the value is unsigned.
+    pub(crate) fn get_signed(&self) -> i128 {
+        match self {
+            Self::Signed(value) => *value,
+            Self::Unsigned(_) => panic!("better_enums: signed called on unsigned value"),
+        }
+    }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub(crate) struct Domain {
     pub(crate) min: Number,
     pub(crate) max: Number,
     pub(crate) unsigned: bool,
-    pub(crate) span: Span,
+    pub(crate) ident: Ident,
 }
 
 impl TryFrom<&Ident> for Domain {
     type Error = syn::Error;
     fn try_from(repr: &Ident) -> Result<Self, Self::Error> {
+        println!("{}", repr);
         let result = match repr.to_string().as_str() {
             "i8" => Domain {
                 min: Number::Signed(i8::MIN as i128),
                 max: Number::Signed(i8::MAX as i128),
                 unsigned: false,
-                span: repr.span(),
+                ident: repr.clone(),
             },
             "i16" => Domain {
                 min: Number::Signed(i16::MIN as i128),
                 max: Number::Signed(i16::MAX as i128),
                 unsigned: false,
-                span: repr.span(),
+                ident: repr.clone(),
             },
             "i32" => Domain {
                 min: Number::Signed(i32::MIN as i128),
                 max: Number::Signed(i32::MAX as i128),
                 unsigned: false,
-                span: repr.span(),
+                ident: repr.clone(),
             },
             "i64" => Domain {
                 min: Number::Signed(i64::MIN as i128),
                 max: Number::Signed(i64::MAX as i128),
                 unsigned: false,
-                span: repr.span(),
+                ident: repr.clone(),
             },
             "i128" => Domain {
                 min: Number::Signed(i128::MIN),
                 max: Number::Signed(i128::MAX),
                 unsigned: false,
-                span: repr.span(),
+                ident: repr.clone(),
             },
             "isize" => Domain {
                 min: Number::Signed(isize::MIN as i128),
                 max: Number::Signed(isize::MAX as i128),
                 unsigned: false,
-                span: repr.span(),
+                ident: repr.clone(),
             },
             "u8" => Domain {
                 min: Number::Unsigned(0),
                 max: Number::Unsigned(u8::MAX as u128),
                 unsigned: true,
-                span: repr.span(),
+                ident: repr.clone(),
             },
             "u16" => Domain {
                 min: Number::Unsigned(0),
                 max: Number::Unsigned(u16::MAX as u128),
                 unsigned: true,
-                span: repr.span(),
+                ident: repr.clone(),
             },
             "u32" => Domain {
                 min: Number::Unsigned(0),
                 max: Number::Unsigned(u32::MAX as u128),
                 unsigned: true,
-                span: repr.span(),
+                ident: repr.clone(),
             },
             "u64" => Domain {
                 min: Number::Unsigned(0),
                 max: Number::Unsigned(u64::MAX as u128),
                 unsigned: true,
-                span: repr.span(),
+                ident: repr.clone(),
             },
             "u128" => Domain {
                 min: Number::Unsigned(0),
                 max: Number::Unsigned(u128::MAX),
                 unsigned: true,
-                span: repr.span(),
+                ident: repr.clone(),
             },
             "usize" => Domain {
                 min: Number::Unsigned(0),
                 max: Number::Unsigned(usize::MAX as u128),
                 unsigned: true,
-                span: repr.span(),
+                ident: repr.clone(),
             },
             _ => {
-                return Err(SynError::new(
-                    repr.span(),
+                return Err(syn::Error::new_spanned(
+                    repr,
                     "better_enums: repr must be an integer type",
                 ));
             }
@@ -179,6 +204,7 @@ impl TryFrom<&Ident> for Domain {
 
 #[derive(Clone)]
 pub(crate) struct RangeValue {
+    pub(crate) expr: ExprRange,
     pub(crate) start: Option<Expr>,
     pub(crate) end: Option<Expr>,
     pub(crate) inclusive: bool,
@@ -202,16 +228,16 @@ impl RangeValue {
             .unwrap_or(domain.max);
 
         if let Some(expr) = &start {
-            if !start_value.validate(domain) {
-                return Err(SynError::new_spanned(
+            if !start_value.validate(&domain) {
+                return Err(syn::Error::new_spanned(
                     expr,
                     "better_enums: value is outside the repr range",
                 ));
             }
         }
         if let Some(expr) = &end {
-            if !end_value.validate(domain) {
-                return Err(SynError::new_spanned(
+            if !end_value.validate(&domain) {
+                return Err(syn::Error::new_spanned(
                     expr,
                     "better_enums: value is outside the repr range",
                 ));
@@ -223,16 +249,20 @@ impl RangeValue {
                 Number::Signed(value) => value.checked_sub(1).map(Number::Signed),
                 Number::Unsigned(value) => value.checked_sub(1).map(Number::Unsigned),
             }
-            .ok_or_else(|| SynError::new_spanned(range, "better_enums: range is empty"))?
+            .ok_or_else(|| syn::Error::new_spanned(range, "better_enums: range is empty"))?
         } else {
             end_value
         };
 
         if start_value > upper {
-            return Err(SynError::new_spanned(range, "better_enums: range is empty"));
+            return Err(syn::Error::new_spanned(
+                range,
+                "better_enums: range is empty",
+            ));
         }
 
         Ok(RangeValue {
+            expr: range.clone(),
             start,
             end,
             inclusive: matches!(range.limits, RangeLimits::Closed(_)),
@@ -242,13 +272,12 @@ impl RangeValue {
     }
 }
 
-#[derive(Clone)]
-pub(crate) enum RangeMapping {
+pub(crate) enum Variant {
     Single { expr: Expr, value: Number },
-    Range(Box<RangeValue>),
+    Range(RangeValue),
 }
 
-impl RangeMapping {
+impl Variant {
     pub(crate) fn lower(&self) -> Number {
         match self {
             Self::Single { value, .. } => *value,
@@ -267,25 +296,26 @@ impl RangeMapping {
         self.lower() <= other.upper() && other.lower() <= self.upper()
     }
 
-    pub(crate) fn parse(expr: &Expr, bounds: Domain) -> syn::Result<Vec<Self>> {
+    pub(crate) fn parse(expr: &Expr, bounds: &Domain) -> syn::Result<Vec<Self>> {
         match expr {
             Expr::Lit(_) | Expr::Unary(_) => {
                 let value = Number::parse(expr, bounds.unsigned)?;
-                if !value.validate(bounds) {
-                    return Err(SynError::new_spanned(
+                if !value.validate(&bounds) {
+                    return Err(syn::Error::new_spanned(
                         expr,
                         "better_enums: value is outside the repr range",
                     ));
                 }
 
-                Ok(vec![RangeMapping::Single {
+                Ok(vec![Variant::Single {
                     expr: expr.clone(),
                     value,
                 }])
             }
-            Expr::Range(range) => Ok(vec![RangeMapping::Range(Box::new(RangeValue::parse(
-                range, bounds,
-            )?))]),
+            Expr::Range(range) => Ok(vec![Variant::Range(RangeValue::parse(
+                range,
+                bounds.clone(),
+            )?)]),
             Expr::Array(array) => array
                 .elems
                 .iter()
@@ -294,7 +324,7 @@ impl RangeMapping {
                     all.extend(result?);
                     Ok(all)
                 }),
-            _ => Err(SynError::new_spanned(
+            _ => Err(syn::Error::new_spanned(
                 expr,
                 "better_enums: discriminant must be an integer, range, or array thereof",
             )),
@@ -302,13 +332,12 @@ impl RangeMapping {
     }
 }
 
-pub(crate) struct RangeVariantMapping {
+pub(crate) struct VariantMapping {
     pub(crate) name: Ident,
-    pub(crate) span: Span,
-    pub(crate) mappings: Vec<RangeMapping>,
+    pub(crate) mappings: Vec<Variant>,
 }
 
-impl RangeVariantMapping {
+impl VariantMapping {
     pub(crate) fn overlaps(&self, other: &Self) -> bool {
         self.mappings.iter().any(|mapping| {
             other
