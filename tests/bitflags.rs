@@ -50,6 +50,26 @@ fn test_shift() {
 }
 
 #[test]
+fn test_bitwise_operations() {
+    let mut flags = ExhaustiveBitflag::from_bits(0);
+    
+    flags |= ExhaustiveBitflag::One;
+    assert_eq!(flags, ExhaustiveBitflag::from_bits(0b0000_0001));
+
+    flags = flags | ExhaustiveBitflag::Two;
+    assert_eq!(flags, ExhaustiveBitflag::from_bits(0b0000_0011));
+
+    flags = ExhaustiveBitflag::from_bits(0b0000_1101) & flags;
+    assert_eq!(flags, ExhaustiveBitflag::from_bits(0b0000_0001));
+    flags = ExhaustiveBitflag::OneTwentyEight ^ flags;
+    assert_eq!(flags, ExhaustiveBitflag::from_bits(0b1000_0001));
+
+    let flags = NonExhaustiveBitflag::One | NonExhaustiveBitflag::Two;
+    let t = 0b0000_0011;
+    assert_eq!(Ok(flags), NonExhaustiveBitflag::try_from_bits(t))
+}
+
+#[test]
 fn test_bitflags_contains() {
     let flags = ExhaustiveBitflag::One | ExhaustiveBitflag::Two | ExhaustiveBitflag::Four;
     assert!(flags.contains(ExhaustiveBitflag::One));

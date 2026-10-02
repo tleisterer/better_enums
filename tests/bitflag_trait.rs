@@ -66,3 +66,17 @@ fn test_bitflags_is_empty() {
     assert!(flags.is_empty());
     assert!(!flags.is_full());
 }
+
+#[test]
+fn test_bitflags_operations() {
+    let mut flags = Flag::from_bits(0);
+    
+    flags |= Flag::from_bits(Flag::One as u8);
+    assert_eq!(flags, Flag::from_bits(0b0000_0001));
+
+    flags = flags | Flag::from_bits(Flag::Two as u8);
+    assert_eq!(flags, Flag::from_bits(0b0000_0011));
+
+    flags = Flag::from_bits(0b0000_1101) & flags;
+    assert_eq!(flags, Flag::from_bits(0b0000_0001));
+}

@@ -134,6 +134,30 @@ impl Setting for BitflagsSetting {
                 }
             }
 
+            impl std::ops::BitAnd<#krate::flags::Bitflags<Self>> for #enum_name {
+                type Output = #krate::flags::Bitflags<Self>;
+                #[inline(always)]
+                fn bitand(self, rhs: #krate::flags::Bitflags<Self>) -> Self::Output {
+                    rhs.bitand(self)
+                }
+            }
+
+            impl std::ops::BitOr<#krate::flags::Bitflags<Self>> for #enum_name {
+                type Output = #krate::flags::Bitflags<Self>;
+                #[inline(always)]
+                fn bitor(self, rhs: #krate::flags::Bitflags<Self>) -> Self::Output {
+                    rhs.bitor(self)
+                }
+            }
+
+            impl std::ops::BitXor<#krate::flags::Bitflags<Self>> for #enum_name {
+                type Output = #krate::flags::Bitflags<Self>;
+                #[inline(always)]
+                fn bitxor(self, rhs: #krate::flags::Bitflags<Self>) -> Self::Output {
+                    rhs.bitxor(self)
+                }
+            }
+
             impl #krate::flags::Bit for #enum_name {
                 type Repr = #repr;
 

@@ -129,18 +129,27 @@ mod traits {
 pub struct Bitflags<T: Bit>(T::Repr);
 
 impl<T: Bit> Bitflags<T> {
+    /// Returns true if the set of flags contains the given flag.
+    #[inline(always)]
     pub fn contains(&self, flag: T) -> bool {
         self.0 & flag.value() == flag.value()
     }
 
+    /// Returns true if the set of flags is empty.
+    #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.0 == T::EMPTY
     }
 
+    /// Returns true if the set of flags is full.
+    /// full means that all possible flags are set.
+    #[inline(always)]
     pub fn is_full(&self) -> bool {
         self.0 == T::FULL
     }
 
+    /// Returns the underlying value of the set of flags.
+    #[inline(always)]
     pub fn value(&self) -> T::Repr {
         self.0
     }
@@ -218,6 +227,51 @@ impl<T: ExhaustiveBit> Not for Bitflags<T> {
     #[inline(always)]
     fn not(self) -> Self::Output {
         Self(self.0.not())
+    }
+}
+
+impl<T: Bit> BitAnd for Bitflags<T> {
+    type Output = Self;
+    #[inline(always)]
+    fn bitand(self, rhs: Self) -> Self::Output {
+        Self(self.0.bitand(rhs.value()))
+    }
+}
+
+impl<T: Bit> BitOr for Bitflags<T> {
+    type Output = Self;
+    #[inline(always)]
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Self(self.0.bitor(rhs.value()))
+    }
+}
+
+impl<T: Bit> BitXor for Bitflags<T> {
+    type Output = Self;
+    #[inline(always)]
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        Self(self.0.bitxor(rhs.value()))
+    }
+}
+
+impl<T: Bit> BitAndAssign for Bitflags<T> {
+    #[inline(always)]
+    fn bitand_assign(&mut self, rhs: Self) -> () {
+        self.0 = self.0.bitand(rhs.value());
+    }
+}
+
+impl<T: Bit> BitOrAssign for Bitflags<T> {
+    #[inline(always)]
+    fn bitor_assign(&mut self, rhs: Self) -> () {
+        self.0 = self.0.bitor(rhs.value());
+    }
+}
+
+impl<T: Bit> BitXorAssign for Bitflags<T> {
+    #[inline(always)]
+    fn bitxor_assign(&mut self, rhs: Self) -> () {
+        self.0 = self.0.bitxor(rhs.value());
     }
 }
 
