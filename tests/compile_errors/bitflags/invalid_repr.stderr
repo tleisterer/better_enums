@@ -1,0 +1,5 @@
+error: better_enums: bitflags repr must be unsigned
+ --> tests/compile_errors/bitflags/invalid_repr.rs:4:8
+  |
+4 | #[repr(i8)]
+  |        ^^

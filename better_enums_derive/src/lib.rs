@@ -1,15 +1,14 @@
-mod generate;
 mod model;
-mod parse;
+mod settings;
+mod utils;
 
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{ItemEnum, parse_macro_input};
 
-use crate::generate::generate_code;
-use crate::parse::{collect_variants, domain, extract_repr, validate_overlaps};
+use crate::{model::Domain, settings::SettingFactory, utils::extract_repr};
 
-fn better_enums_impl(mut input: ItemEnum) -> Result<TokenStream, syn::Error> {
+fn better_enums_impl(attr: TokenStream, mut input: ItemEnum) -> Result<TokenStream, syn::Error> {
     if input.generics.lt_token.is_some() || input.generics.where_clause.is_some() {
         return Err(syn::Error::new_spanned(
             &input.generics,
@@ -17,21 +16,20 @@ fn better_enums_impl(mut input: ItemEnum) -> Result<TokenStream, syn::Error> {
         ));
     }
 
-    let repr = extract_repr(&input.attrs, &input.ident)?;
-    let bounds = domain(&repr);
-    let variants = collect_variants(&mut input, bounds)?;
-    validate_overlaps(&variants)?;
+    let setting = SettingFactory::create(attr)?;
+    let bounds = extract_repr(&input.attrs, &input.ident)?;
+    let variants = setting.validate(&mut input.variants.iter_mut(), &bounds)?;
+    let code = setting.generate(&variants, &input.ident, &bounds);
 
-    let code = generate_code(&input.ident, &repr, &variants);
     Ok(quote! { #input #code })
 }
 
 #[proc_macro_attribute]
 pub fn better_enums(
-    _attr: proc_macro::TokenStream,
+    attr: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    match better_enums_impl(parse_macro_input!(input as ItemEnum)) {
+    match better_enums_impl(attr.into(), parse_macro_input!(input as ItemEnum)) {
         Ok(tokens) => tokens.into(),
         Err(error) => error.to_compile_error().into(),
     }

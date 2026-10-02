@@ -1,0 +1,5 @@
+error: better_enums: Ranges are not supported in bitflags
+ --> tests/compile_errors/bitflags/range_used.rs:6:13
+  |
+6 |     Value = 1..5,
+  |             ^^^^
