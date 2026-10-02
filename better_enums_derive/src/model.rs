@@ -77,7 +77,17 @@ impl Number {
             Self::Signed(value) => value.to_string(),
             Self::Unsigned(value) => value.to_string(),
         };
-        syn::parse_str(&text).expect("validated discriminant should parse")
+        syn::parse_str(&text).expect("better_enums: validated discriminant should parse")
+    }
+
+    pub(crate) fn checked_add(self, rhs: u128) -> Option<Self> {
+        match self {
+            Self::Signed(value) => {
+                let rhs = i128::try_from(rhs).ok()?;
+                value.checked_add(rhs).map(Self::Signed)
+            }
+            Self::Unsigned(value) => value.checked_add(rhs).map(Self::Unsigned),
+        }
     }
 
     /// Warning: this function will panic if called on a signed value.
@@ -117,7 +127,6 @@ pub(crate) struct Domain {
 impl TryFrom<&Ident> for Domain {
     type Error = syn::Error;
     fn try_from(repr: &Ident) -> Result<Self, Self::Error> {
-        println!("{}", repr);
         let result = match repr.to_string().as_str() {
             "i8" => Domain {
                 min: Number::Signed(i8::MIN as i128),
@@ -205,9 +214,6 @@ impl TryFrom<&Ident> for Domain {
 #[derive(Clone)]
 pub(crate) struct RangeValue {
     pub(crate) expr: ExprRange,
-    pub(crate) start: Option<Expr>,
-    pub(crate) end: Option<Expr>,
-    pub(crate) inclusive: bool,
     pub(crate) lower: Number,
     pub(crate) upper: Number,
 }
@@ -263,9 +269,6 @@ impl RangeValue {
 
         Ok(RangeValue {
             expr: range.clone(),
-            start,
-            end,
-            inclusive: matches!(range.limits, RangeLimits::Closed(_)),
             lower: start_value,
             upper,
         })
@@ -300,7 +303,7 @@ impl Variant {
         match expr {
             Expr::Lit(_) | Expr::Unary(_) => {
                 let value = Number::parse(expr, bounds.unsigned)?;
-                if !value.validate(&bounds) {
+                if !value.validate(bounds) {
                     return Err(syn::Error::new_spanned(
                         expr,
                         "better_enums: value is outside the repr range",
@@ -347,11 +350,31 @@ impl VariantMapping {
         })
     }
 
+    pub(crate) fn check_overlap(&self, other: &Self) -> Result<(), syn::Error> {
+        if self.overlaps(other) {
+            return Err(syn::Error::new_spanned(
+                &self.name,
+                format!("better_enums: {} overlaps with {}", self.name, other.name),
+            ));
+        }
+        Ok(())
+    }
+
     pub(crate) fn valid(&self) -> bool {
         self.mappings.iter().enumerate().all(|(index, mapping)| {
             self.mappings[index + 1..]
                 .iter()
                 .all(|other_mapping| !mapping.overlaps(other_mapping))
         })
+    }
+
+    pub(crate) fn check_valid(&self) -> Result<(), syn::Error> {
+        if !self.valid() {
+            return Err(syn::Error::new_spanned(
+                &self.name,
+                format!("better_enums: {} has overlapping values", self.name),
+            ));
+        }
+        Ok(())
     }
 }

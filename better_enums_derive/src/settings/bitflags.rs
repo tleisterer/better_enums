@@ -47,10 +47,10 @@ impl Setting for BitflagsSetting {
                 }]
             };
 
-            if mappings.is_empty() {
+            if mappings.len() != 1 {
                 return Err(syn::Error::new_spanned(
                     &variant,
-                    "better_enums: a variant must map to at least one value",
+                    "better_enums: a variant must map to exactly one value",
                 ));
             }
 
@@ -83,27 +83,11 @@ impl Setting for BitflagsSetting {
                 mappings,
             };
 
-            if !current.valid() {
-                return Err(syn::Error::new_spanned(
-                    &variant.ident,
-                    format!(
-                        "better_enums: mappings for {} overlap or duplicate each other",
-                        current.name
-                    ),
-                ));
-            }
+            current.check_valid()?;
 
-            for previous in &result {
-                if current.overlaps(previous) {
-                    return Err(syn::Error::new_spanned(
-                        &variant.ident,
-                        format!(
-                            "better_enums: mapping for {} overlaps mapping for {}",
-                            current.name, previous.name
-                        ),
-                    ));
-                }
-            }
+            result
+                .iter()
+                .try_for_each(|previous| current.check_overlap(previous))?;
 
             result.push(current);
         }
@@ -137,24 +121,33 @@ impl Setting for BitflagsSetting {
 
         let repr = &bounds.ident;
 
+        let exhaustive = (full == bounds.max.get_unsigned()).then(|| {
+            quote! { impl #krate::flags::ExhaustiveBit for #enum_name {} }
+        });
+
         quote! {
             impl std::ops::BitOr for #enum_name {
                 type Output = #krate::flags::Bitflags<Self>;
                 fn bitor(self, rhs: Self) -> Self::Output {
-                    Self::from_bits(self.value() | rhs.value())
+                    // unwrap is safe to call here, because it only converts valid enum values
+                    <Self as #krate::flags::TryFromBits>::try_from_bits(self.value() | rhs.value()).unwrap()
                 }
             }
 
             impl #krate::flags::Bit for #enum_name {
                 type Repr = #repr;
 
-                const FULL: Self::Repr = #full;
+                const FULL: Self::Repr = #full as Self::Repr;
                 const EMPTY: Self::Repr = 0;
 
                 fn value(&self) -> Self::Repr {
-                    *self as Self::Repr
+                    // SAFETY: `#enum_name` is #[repr(#repr)], so its representation
+                    // is an integer of type `#repr` containing the discriminant.
+                    unsafe { std::ptr::read(self as *const #enum_name as *const #repr) }
                 }
             }
+
+            #exhaustive
         }
     }
 }

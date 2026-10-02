@@ -6,34 +6,30 @@ use syn::{Fields, Ident, Token};
 use super::Setting;
 use crate::{
     Domain,
-    model::{Number, Variant, VariantMapping},
+    model::{Number, RangeValue, Variant, VariantMapping},
 };
 
 pub(super) struct RangeSetting;
 
 impl RangeSetting {
-    fn condition(mapping: &Variant) -> TokenStream {
-        match mapping {
+    fn arm(variant: &VariantMapping, enum_name: &Ident) -> TokenStream {
+        let conditions = variant.mappings.iter().map(|mapping| match mapping {
             Variant::Single { expr, .. } => quote!(value == #expr),
-            Variant::Range(range) => match (range.start.as_ref(), range.end.as_ref()) {
-                (Some(start), Some(end)) => {
-                    if range.inclusive {
-                        quote!((#start..=#end).contains(&value))
-                    } else {
-                        quote!((#start..#end).contains(&value))
-                    }
-                }
-                (Some(start), None) => quote!(value >= #start),
-                (None, Some(end)) => {
-                    if range.inclusive {
-                        quote!(value <= #end)
-                    } else {
-                        quote!(value < #end)
-                    }
-                }
-                (None, None) => quote!(true),
-            },
-        }
+            Variant::Range(RangeValue { expr, .. }) => {
+                quote! { <_ as std::ops::RangeBounds<_>>::contains(&(#expr), &value) }
+            }
+        });
+        let name = &variant.name;
+        quote! { else if #(#conditions)||* { Ok(#enum_name::#name) } }
+    }
+
+    fn next_value(mappings: &[Variant], bounds: &Domain) -> Option<Number> {
+        mappings
+            .iter()
+            .map(Variant::upper)
+            .max()
+            .and_then(|value| Number::checked_add(value, 1))
+            .filter(|value| *value <= bounds.max)
     }
 }
 
@@ -53,20 +49,19 @@ impl Setting for RangeSetting {
         for variant in variants {
             if !matches!(variant.fields, Fields::Unit) {
                 return Err(syn::Error::new_spanned(
-                    &*variant,
+                    variant,
                     "better_enums: variant cannot have additional data",
                 ));
             }
 
             let mappings = if let Some((_, expr)) = &variant.discriminant {
-                Variant::parse(expr, &bounds)?
+                Variant::parse(expr, bounds)?
             } else {
-                let value = next.ok_or_else(|| {
-                    syn::Error::new_spanned(
-                        &*variant,
-                        "better_enums: no implicit value remains in repr range",
-                    )
-                })?;
+                let value = next.ok_or(syn::Error::new_spanned(
+                    &variant,
+                    "better_enums: no implicit value remains in repr range",
+                ))?;
+
                 vec![Variant::Single {
                     expr: value.into_expr(),
                     value,
@@ -75,49 +70,25 @@ impl Setting for RangeSetting {
 
             if mappings.is_empty() {
                 return Err(syn::Error::new_spanned(
-                    &*variant,
+                    variant,
                     "better_enums: a variant must map to at least one value",
                 ));
             }
 
             let representative = mappings[0].lower();
             variant.discriminant = Some((<Token![=]>::default(), representative.into_expr()));
-            next = mappings
-                .iter()
-                .map(Variant::upper)
-                .max()
-                .and_then(|value| match value {
-                    Number::Signed(value) => value.checked_add(1).map(Number::Signed),
-                    Number::Unsigned(value) => value.checked_add(1).map(Number::Unsigned),
-                })
-                .filter(|value| *value <= bounds.max);
 
             let current = VariantMapping {
                 name: variant.ident.clone(),
                 mappings,
             };
 
-            if !current.valid() {
-                return Err(syn::Error::new_spanned(
-                    &current.name,
-                    format!(
-                        "better_enums: mappings for {} overlap or duplicate each other",
-                        current.name
-                    ),
-                ));
-            }
+            current.check_valid()?;
+            result
+                .iter()
+                .try_for_each(|previous| current.check_overlap(previous))?;
 
-            for previous in &result {
-                if current.overlaps(previous) {
-                    return Err(syn::Error::new_spanned(
-                        &current.name,
-                        format!(
-                            "better_enums: mapping for {} overlaps mapping for {}",
-                            current.name, previous.name
-                        ),
-                    ));
-                }
-            }
+            next = Self::next_value(&current.mappings, bounds);
 
             result.push(current);
         }
@@ -131,14 +102,9 @@ impl Setting for RangeSetting {
         enum_name: &Ident,
         bounds: &Domain,
     ) -> TokenStream {
-        let arms = variants.iter().map(|variant| {
-            let conditions = variant.mappings.iter().map(Self::condition);
-            let name = &variant.name;
-            quote! { if #(#conditions)||* { return Ok(#enum_name::#name); } }
-        });
+        let arms = variants.iter().map(|variant| Self::arm(variant, enum_name));
 
-        let krate =
-            crate_name("better_enums").expect("If this crate is not included something went wrong");
+        let krate = crate_name("better_enums").expect("better_enums must be available");
 
         let krate = match krate {
             FoundCrate::Itself => quote! { better_enums },
@@ -154,8 +120,11 @@ impl Setting for RangeSetting {
             impl std::convert::TryFrom<#repr> for #enum_name {
                 type Error = #krate::error::BetterEnumsError<#repr>;
                 fn try_from(value: #repr) -> Result<Self, Self::Error> {
+                    if false { unreachable!() }
                     #(#arms)*
-                    Err(Self::Error::Discriminant(value))
+                    else {
+                        Err(Self::Error::Discriminant(value))
+                    }
                 }
             }
         }

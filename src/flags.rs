@@ -1,4 +1,7 @@
-use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not, Shl, Shr};
+use std::ops::{
+    BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not, Shl, ShlAssign, Shr,
+    ShrAssign,
+};
 
 use crate::error::BetterEnumsError;
 
@@ -145,7 +148,11 @@ impl<T: Bit> Bitflags<T> {
 
 impl<T: ExhaustiveBit> FromBits for T {
     fn from_bits(value: Self::Repr) -> Bitflags<Self> {
-        Bitflags(value)
+        if T::FULL & value == value {
+            Bitflags(value)
+        } else {
+            unreachable!("better_enums: ExhaustiveBit implementation for non-exhaustive enum")
+        }
     }
 }
 
@@ -228,6 +235,20 @@ for_each_number_primitive!($type =>
         #[inline(always)]
         fn shl(self, rhs: $type) -> Self::Output {
             Self(self.0.shl(rhs))
+        }
+    }
+
+    impl<T: ExhaustiveBit> ShrAssign<$type> for Bitflags<T> {
+        #[inline(always)]
+        fn shr_assign(&mut self, rhs: $type) -> () {
+            self.0 = self.0.shr(rhs);
+        }
+    }
+
+    impl<T: ExhaustiveBit> ShlAssign<$type> for Bitflags<T> {
+        #[inline(always)]
+        fn shl_assign(&mut self, rhs: $type) -> () {
+            self.0 = self.0.shl(rhs);
         }
     }
 );
