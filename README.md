@@ -129,7 +129,7 @@ values, ranges, and arrays.
 - Biftlag enum variants can not be shifted (`<< or >>`) directly;
   use `Bitflags::from(enum)` instead
 - Non exhaustive bitflag enums can not be shifted at all
-- The value used in `as` casts can not be modified (Enum::Variant as u8);
+- The value used in `as` casts can not be modified (`Enum::Variant as u8`);
   its always the first element (the smaller number in case of ranges)
 
 ## Plans
@@ -139,6 +139,4 @@ values, ranges, and arrays.
 - Generate `From<repr>` for range-based enums whose mappings cover every value
   in the representation. Non-exhaustive mappings would continue to use
   `TryFrom<repr>`.
-- Add focused compile-fail tests for unsupported expressions and constants so
-  the accepted mapping syntax remains explicit.
 - Add a possibility to modify the Value that is used in `as` casts: e.g submacro `#[default = 15]`
