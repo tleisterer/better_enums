@@ -31,3 +31,5 @@ pub mod error;
 pub use better_enums_derive::better_enums;
 
 pub mod flags;
+
+pub extern crate self as better_enums;
