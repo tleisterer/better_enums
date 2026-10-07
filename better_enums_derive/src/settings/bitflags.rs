@@ -73,7 +73,7 @@ impl Setting for BitflagsSetting {
                         "better_enums: Ranges are not supported in bitflags",
                     )),
                 })
-                .and_then(|value| Ok(value.get_unsigned().checked_shl(1).map(Number::Unsigned)))?
+                .map(|value| value.get_unsigned().checked_shl(1).map(Number::Unsigned))?
                 .filter(|value| *value <= bounds.max);
 
             let current = VariantMapping {

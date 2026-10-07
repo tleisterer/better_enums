@@ -203,21 +203,21 @@ impl<T: Bit> BitXor<T> for Bitflags<T> {
 
 impl<T: Bit> BitAndAssign<T> for Bitflags<T> {
     #[inline(always)]
-    fn bitand_assign(&mut self, rhs: T) -> () {
+    fn bitand_assign(&mut self, rhs: T) {
         self.0 = self.0.bitand(rhs.value());
     }
 }
 
 impl<T: Bit> BitOrAssign<T> for Bitflags<T> {
     #[inline(always)]
-    fn bitor_assign(&mut self, rhs: T) -> () {
+    fn bitor_assign(&mut self, rhs: T) {
         self.0 = self.0.bitor(rhs.value());
     }
 }
 
 impl<T: Bit> BitXorAssign<T> for Bitflags<T> {
     #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: T) -> () {
+    fn bitxor_assign(&mut self, rhs: T) {
         self.0 = self.0.bitxor(rhs.value());
     }
 }
@@ -256,21 +256,21 @@ impl<T: Bit> BitXor for Bitflags<T> {
 
 impl<T: Bit> BitAndAssign for Bitflags<T> {
     #[inline(always)]
-    fn bitand_assign(&mut self, rhs: Self) -> () {
+    fn bitand_assign(&mut self, rhs: Self) {
         self.0 = self.0.bitand(rhs.value());
     }
 }
 
 impl<T: Bit> BitOrAssign for Bitflags<T> {
     #[inline(always)]
-    fn bitor_assign(&mut self, rhs: Self) -> () {
+    fn bitor_assign(&mut self, rhs: Self) {
         self.0 = self.0.bitor(rhs.value());
     }
 }
 
 impl<T: Bit> BitXorAssign for Bitflags<T> {
     #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: Self) -> () {
+    fn bitxor_assign(&mut self, rhs: Self) {
         self.0 = self.0.bitxor(rhs.value());
     }
 }
@@ -294,14 +294,14 @@ for_each_number_primitive!($type =>
 
     impl<T: ExhaustiveBit> ShrAssign<$type> for Bitflags<T> {
         #[inline(always)]
-        fn shr_assign(&mut self, rhs: $type) -> () {
+        fn shr_assign(&mut self, rhs: $type) {
             self.0 = self.0.shr(rhs);
         }
     }
 
     impl<T: ExhaustiveBit> ShlAssign<$type> for Bitflags<T> {
         #[inline(always)]
-        fn shl_assign(&mut self, rhs: $type) -> () {
+        fn shl_assign(&mut self, rhs: $type) {
             self.0 = self.0.shl(rhs);
         }
     }
