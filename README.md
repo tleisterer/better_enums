@@ -5,13 +5,6 @@ integer values, ranges, or bitflags.
 
 ## Usage
 
-Add the crate to your `Cargo.toml`:
-
-```toml
-[dependencies]
-better_enums = "0.2"
-```
-
 The enum must have a primitive integer representation and unit variants. The
 supported representations are `u8`, `u16`, `u32`, `u64`, `u128`, `usize`,
 `i8`, `i16`, `i32`, `i64`, `i128`, and `isize`. Generic enums are not
@@ -27,20 +20,22 @@ use better_enums::better_enums;
 
 #[better_enums]
 #[repr(u16)]
+#[derive(Debug, PartialEq, Eq)]
 enum HttpStatus {
     Ok = 200,
     ClientError = 400..500,
     ServerError = 500..=599,
 }
 
-assert!(matches!(HttpStatus::try_from(200), Ok(HttpStatus::Ok)));
-assert!(matches!(HttpStatus::try_from(404), Ok(HttpStatus::ClientError)));
+assert_eq!(HttpStatus::try_from(200), Ok(HttpStatus::Ok));
+assert_eq!(HttpStatus::try_from(404), Ok(HttpStatus::ClientError));
 assert!(HttpStatus::try_from(302).is_err());
 ```
 
-Mappings can contain integer literals, inclusive ranges (`10..=20`),
-exclusive ranges (`10..20`), unbounded ranges (`..10`, `10..`, or `..`), and
-arrays combining these forms:
+An integer literal maps one value to a variant. Variants without an explicit
+mapping receive the next available value, starting at zero. Mappings can also
+contain inclusive ranges (`10..=20`), exclusive ranges (`10..20`), unbounded
+ranges (`..10`, `10..`, or `..`), and arrays combining numbers and ranges:
 
 ```rust
 #[better_enums]
@@ -51,6 +46,24 @@ enum Number {
     Positive = 1..,
 }
 ```
+
+An array maps every listed number or range to the same variant:
+
+```rust
+#[better_enums]
+#[repr(u8)]
+#[derive(Debug, PartialEq, Eq)]
+enum Status {
+    Initial,
+    Success = [200..300, 304],
+}
+
+assert_eq!(Status::try_from(0), Ok(Status::Initial));
+assert_eq!(Status::try_from(200), Ok(Status::Success));
+assert_eq!(Status::try_from(304), Ok(Status::Success));
+assert!(Status::try_from(301).is_err());
+```
+
 
 ### Bitflags
 
@@ -116,6 +129,11 @@ generic enums, invalid or out-of-range values, empty or reversed ranges,
 overlapping mappings, and exhausted implicit values. Bitflags additionally
 reject signed representations, zero or non-power-of-two values, duplicate
 values, ranges, and arrays.
+
+## Feature
+- default: none
+
+- rename: Adds the possibility to rename the better_enums crate, but adds proc-macro-crate as additional dependencie
 
 ## Known Limitations
 

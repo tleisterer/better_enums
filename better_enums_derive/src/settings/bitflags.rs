@@ -1,10 +1,8 @@
 use crate::model::{Domain, Number, Variant, VariantMapping};
 
-use super::Setting;
-use proc_macro_crate::{FoundCrate, crate_name};
-use proc_macro2::{Span, TokenStream};
+use super::{Setting, get_crate_name};
+use proc_macro2::TokenStream;
 use quote::quote;
-use syn::Ident;
 
 pub(super) struct BitflagsSetting;
 
@@ -75,7 +73,7 @@ impl Setting for BitflagsSetting {
                         "better_enums: Ranges are not supported in bitflags",
                     )),
                 })
-                .and_then(|value| Ok(value.get_unsigned().checked_shl(1).map(Number::Unsigned)))?
+                .map(|value| value.get_unsigned().checked_shl(1).map(Number::Unsigned))?
                 .filter(|value| *value <= bounds.max);
 
             let current = VariantMapping {
@@ -101,16 +99,7 @@ impl Setting for BitflagsSetting {
         enum_name: &syn::Ident,
         bounds: &Domain,
     ) -> TokenStream {
-        let krate =
-            crate_name("better_enums").expect("If this crate is not included something went wrong");
-
-        let krate = match krate {
-            FoundCrate::Itself => quote! { better_enums },
-            FoundCrate::Name(name) => {
-                let ident = Ident::new(&name, Span::call_site());
-                quote! { #ident }
-            }
-        };
+        let krate = get_crate_name();
 
         let full = variants.iter().fold(0, |all, v| {
             all | v.mappings.iter().fold(0, |acc, m| match m {
@@ -129,6 +118,7 @@ impl Setting for BitflagsSetting {
             impl std::ops::BitOr for #enum_name {
                 type Output = #krate::flags::Bitflags<Self>;
                 fn bitor(self, rhs: Self) -> Self::Output {
+                    use #krate::flags::Bit;
                     // unwrap is safe to call here, because it only converts valid enum values
                     <Self as #krate::flags::TryFromBits>::try_from_bits(self.value() | rhs.value()).unwrap()
                 }

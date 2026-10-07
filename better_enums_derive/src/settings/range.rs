@@ -1,13 +1,9 @@
-use proc_macro_crate::{FoundCrate, crate_name};
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Fields, Ident, Token};
 
-use super::Setting;
-use crate::{
-    Domain,
-    model::{Number, RangeValue, Variant, VariantMapping},
-};
+use super::{Setting, get_crate_name};
+use crate::model::{Domain, Number, RangeValue, Variant, VariantMapping};
 
 pub(super) struct RangeSetting;
 
@@ -104,15 +100,7 @@ impl Setting for RangeSetting {
     ) -> TokenStream {
         let arms = variants.iter().map(|variant| Self::arm(variant, enum_name));
 
-        let krate = crate_name("better_enums").expect("better_enums must be available");
-
-        let krate = match krate {
-            FoundCrate::Itself => quote! { better_enums },
-            FoundCrate::Name(name) => {
-                let ident = Ident::new(&name, Span::call_site());
-                quote! { #ident }
-            }
-        };
+        let krate = get_crate_name();
 
         let repr = &bounds.ident;
 

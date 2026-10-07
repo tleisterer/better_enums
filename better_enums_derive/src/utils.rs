@@ -1,6 +1,6 @@
 use syn::{Attribute, Ident};
 
-use crate::Domain;
+use crate::model::Domain;
 
 pub(crate) fn extract_repr(attrs: &[Attribute], enum_name: &Ident) -> syn::Result<Domain> {
     for attr in attrs {

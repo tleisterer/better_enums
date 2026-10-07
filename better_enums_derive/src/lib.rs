@@ -6,7 +6,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{ItemEnum, parse_macro_input};
 
-use crate::{model::Domain, settings::SettingFactory, utils::extract_repr};
+use crate::{settings::SettingFactory, utils::extract_repr};
 
 fn better_enums_impl(attr: TokenStream, mut input: ItemEnum) -> Result<TokenStream, syn::Error> {
     if input.generics.lt_token.is_some() || input.generics.where_clause.is_some() {
