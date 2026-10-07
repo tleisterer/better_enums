@@ -130,6 +130,11 @@ overlapping mappings, and exhausted implicit values. Bitflags additionally
 reject signed representations, zero or non-power-of-two values, duplicate
 values, ranges, and arrays.
 
+## Feature
+- default: none
+
+- rename: Adds the possibility to rename the better_enums crate, but adds proc-macro-crate as additional dependencie
+
 ## Known Limitations
 
 - Mapping values must currently be integer literals. Named constants cannot be
