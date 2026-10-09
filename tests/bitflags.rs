@@ -1,3 +1,5 @@
+#![allow(clippy::all, unused)]
+
 use better_enums::{
     better_enums,
     flags::{Bit, FromBits, TryFromBits},
@@ -6,7 +8,6 @@ use better_enums::{
 #[derive(Debug, PartialEq, Eq)]
 #[repr(u8)]
 #[better_enums(bitflags)]
-#[allow(unused)]
 enum ExhaustiveBitflag {
     One = 0b0000_0001,
     Two = 0b0000_0010,
@@ -21,7 +22,6 @@ enum ExhaustiveBitflag {
 #[derive(Debug, PartialEq, Eq)]
 #[repr(u8)]
 #[better_enums(bitflags)]
-#[allow(unused)]
 enum NonExhaustiveBitflag {
     One = 0b0000_0001,
     Two = 0b0000_0010,
@@ -52,7 +52,7 @@ fn test_shift() {
 #[test]
 fn test_bitwise_operations() {
     let mut flags = ExhaustiveBitflag::from_bits(0);
-    
+
     flags |= ExhaustiveBitflag::One;
     assert_eq!(flags, ExhaustiveBitflag::from_bits(0b0000_0001));
 

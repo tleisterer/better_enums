@@ -1,3 +1,5 @@
+#![allow(clippy::all, unused)]
+
 use better_enums::better_enums;
 
 #[better_enums]

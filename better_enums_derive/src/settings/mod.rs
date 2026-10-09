@@ -12,8 +12,12 @@ pub(crate) trait Setting {
         variants: &mut dyn Iterator<Item = &mut Variant>,
         bounds: &Domain,
     ) -> Result<Vec<VariantMapping>, syn::Error>;
-    fn generate(&self, variants: &[VariantMapping], enum_name: &Ident, repr: &Domain)
-    -> TokenStream;
+    fn generate(
+        &self,
+        variants: &[VariantMapping],
+        enum_name: &Ident,
+        repr: &Domain,
+    ) -> TokenStream;
 }
 
 pub(crate) struct SettingFactory;
