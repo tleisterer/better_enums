@@ -1,3 +1,4 @@
+#![allow(clippy::assign_op_pattern, unused)]
 use better_enums::better_enums;
 
 #[better_enums]
