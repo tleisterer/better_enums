@@ -14,7 +14,7 @@ pub(crate) fn get_crate_name() -> TokenStream {
         .expect("Dont use better_enums_derive directly: use better_enums instead");
 
     match krate {
-        FoundCrate::Itself => quote! { crate },
+FoundCrate::Itself => quote! { ::better_enums }
         FoundCrate::Name(name) => {
             let ident = Ident::new(&name, proc_macro2::Span::call_site());
             quote! { ::#ident }
