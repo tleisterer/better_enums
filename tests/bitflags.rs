@@ -1,4 +1,5 @@
-#![allow(clippy::assign_op_pattern, unused)]
+#![allow(clippy::all, warnings)]
+
 use better_enums::{
     better_enums,
     flags::{Bit, FromBits, TryFromBits},
@@ -51,7 +52,7 @@ fn test_shift() {
 #[test]
 fn test_bitwise_operations() {
     let mut flags = ExhaustiveBitflag::from_bits(0);
-    
+
     flags |= ExhaustiveBitflag::One;
     assert_eq!(flags, ExhaustiveBitflag::from_bits(0b0000_0001));
 

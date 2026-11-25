@@ -1,4 +1,5 @@
-#![allow(clippy::assign_op_pattern, unused)]
+#![allow(clippy::all, warnings)]
+
 #[test]
 fn compile_errors() {
     let t = trybuild::TestCases::new();
