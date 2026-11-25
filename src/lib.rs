@@ -1,9 +1,11 @@
 //! Map enum variants to values, ranges, or bitflags of a primitive integer type.
 //!
-//! The [`macro@better_enums`] attribute generates an implementation of
-//! [`TryFrom`] for the enum. Each variant can declare one or more values,
-//! ranges, or arrays of values. Variants without an explicit mapping receive
-//! the next available value, starting at zero.
+//! The [`macro@better_enums`] attribute generates conversion support for an
+//! enum. In range mode, each variant can map to one or more values, ranges, or
+//! arrays of values, and the macro implements [`TryFrom`]. Variants without an
+//! explicit mapping receive the next available value, starting at zero.
+//! Bitflags mode provides [`flags::TryFromBits`] or, for exhaustive flags,
+//! [`flags::FromBits`].
 //!
 //! The enum must have a primitive integer representation (`u8`, `i16`, and so
 //! on), use unit variants, and cannot be generic.

@@ -1,1 +1,1 @@
-## This crate is not intended to use directly, use better_enums instead
+## This crate is an implementation detail; use `better_enums` instead.
