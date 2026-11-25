@@ -11,10 +11,10 @@ use crate::model::{Domain, VariantMapping};
 pub(crate) fn get_crate_name() -> TokenStream {
     use proc_macro_crate::{FoundCrate, crate_name};
     let krate = crate_name("better_enums")
-.expect("Don't use better_enums_derive directly: use better_enums instead");
+        .expect("Don't use better_enums_derive directly: use better_enums instead");
 
     match krate {
-FoundCrate::Itself => quote! { ::better_enums }
+        FoundCrate::Itself => quote! { ::better_enums },
         FoundCrate::Name(name) => {
             let ident = Ident::new(&name, proc_macro2::Span::call_site());
             quote! { ::#ident }
