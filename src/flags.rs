@@ -67,7 +67,9 @@ mod traits {
     /// This trait is not intended to be implemented by users. Use
     /// [`Bitflags`] and the conversion traits instead.
     pub trait Bit: Sized {
+        #[allow(private_bounds)]
         type Repr: Copy
+            + __private::NumberPrimitive
             + Clone
             + Sized
             + BitAnd<Self::Repr, Output = Self::Repr>
@@ -159,6 +161,14 @@ mod traits {
         /// Performs the conversion.
         fn try_from_bits(value: Self::Repr) -> Result<Bitflags<Self>, Self::Error>;
     }
+
+    mod __private {
+        pub(super) trait NumberPrimitive {}
+
+        for_each_number_primitive!($type =>
+            impl NumberPrimitive for $type {}
+        );
+    }
 }
 
 /// A set of combined flags for a bitflag enum.
@@ -199,6 +209,11 @@ impl<T: Bit> Bitflags<T> {
     #[inline(always)]
     pub fn value(&self) -> T::Repr {
         self.0
+    }
+
+    /// Creates a `Bitflags` value containing the enum variant.
+    pub fn from(flag: T) -> Self {
+        Self(flag.value())
     }
 }
 

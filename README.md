@@ -1,6 +1,5 @@
 # better_enums
-
-`better_enums` generates efficient conversions for enums whose variants map to
+`better_enums` generates conversions support for enums whose variants map to
 integer values, ranges, or bitflags.
 
 ## Usage
@@ -10,7 +9,7 @@ supported representations are `u8`, `u16`, `u32`, `u64`, `u128`, `usize`,
 `i8`, `i16`, `i32`, `i64`, `i128`, and `isize`. Generic enums are not
 supported.
 
-### Range-based enums
+# Ranges
 
 Use `#[better_enums]` or `#[better_enums(range)]` to generate a
 `TryFrom<repr>` implementation:
@@ -38,6 +37,8 @@ contain inclusive ranges (`10..=20`), exclusive ranges (`10..20`), unbounded
 ranges (`..10`, `10..`, or `..`), and arrays combining numbers and ranges:
 
 ```rust
+use better_enums::better_enums;
+
 #[better_enums]
 #[repr(i8)]
 enum Number {
@@ -50,6 +51,8 @@ enum Number {
 An array maps every listed number or range to the same variant:
 
 ```rust
+use better_enums::better_enums;
+
 #[better_enums]
 #[repr(u16)]
 #[derive(Debug, PartialEq, Eq)]
@@ -64,23 +67,23 @@ assert_eq!(Status::try_from(304), Ok(Status::Success));
 assert!(Status::try_from(301).is_err());
 ```
 
-
-### Bitflags
+# Bitflags
 
 Use `#[better_enums(bitflags)]` for a set of independent flags. Bitflags must
 use an unsigned representation, and every variant must be a unit variant with
 one non-zero power-of-two value. Ranges and arrays are not supported in this
 mode.
 
-The macro implements `flags::Bit` and `BitOr` between enum variants. The
-result is a `flags::Bitflags<Enum>`. Use `TryFromBits` when the enum does not
-define every bit:
+Omitted discriminants are assigned automatically: if the first variant
+omits its value, it defaults to `1`; each later omitted value is twice the
+preceding variant's value.
 
 ```rust
-use better_enums::{better_enums, flags::TryFromBits};
+use better_enums::{better_enums, flags::{TryFromBits, Bit}};
 
 #[better_enums(bitflags)]
 #[repr(u8)]
+#[derive(Debug, PartialEq)]
 enum Permission {
     Read = 0b0000_0001,
     Write = 0b0000_0010,
@@ -90,15 +93,16 @@ enum Permission {
 let permissions = Permission::Read | Permission::Write;
 assert!(permissions.contains(Permission::Read));
 assert_eq!(permissions.value(), 0b0000_0011);
+assert_eq!(Permission::try_from_bits(0b0000_0111),
+    Ok(Permission::Read | Permission::Write | Permission::Execute));
 assert!(Permission::try_from_bits(0b0000_1000).is_err());
 ```
 
-When the enum defines every bit in its representation, the macro also
-implements `ExhaustiveBit`. In that case, import `FromBits` and use the
-infallible `from_bits` conversion:
+When the enum defines every bit in its representation, you can use the
+infallible `from_bits` version:
 
 ```rust
-use better_enums::{better_enums, flags::FromBits};
+use better_enums::{better_enums, flags::{FromBits, Bit}};
 
 #[better_enums(bitflags)]
 #[repr(u8)]
@@ -118,19 +122,7 @@ assert!(flags.contains(ExhaustiveFlags::One));
 assert_eq!(flags.value(), 0b0000_0011);
 ```
 
-`Bitflags` provides the methods `contains`, `is_empty`, `is_full`, and `value`. It also
-supports bitwise operations with enum variants. `Not` and shift operations are
-available for exhaustive flags, this may change in the future to support non-exhaustive flags as well.
-
-## Validation
-
-The macro rejects missing or non-integer representations, variants with data,
-generic enums, invalid or out-of-range values, empty or reversed ranges,
-overlapping mappings, and exhausted implicit values. Bitflags additionally
-reject signed representations, zero or non-power-of-two values, duplicate
-values, ranges, and arrays.
-
-## Feature
+## Features
 - default: none
 
 - rename: Adds the possibility to rename the better_enums crate, but adds
@@ -145,12 +137,13 @@ values, ranges, and arrays.
 - Range-based enums always implement `TryFrom<repr>`, even when their mappings
   cover the complete representation. They do not currently implement
   `From<repr>`.
-- Bitflag enum variants cannot be shifted (`<<` or `>>`) directly;
-  use `Bitflags::from(enum)` instead
-- Non-exhaustive bitflag enums cannot be shifted at all.
+- Enum variants cannot be shifted (`<<` or `>>`) directly; convert one to a
+  `Bitflags` value with `Bitflags::from(variant)` first. Shifting is available
+  only for exhaustive bitflags.
 - The value used in `as` casts cannot be modified (`Enum::Variant as u8`);
   it is always the first element (the smaller number in case of ranges).
 
+<!-- 
 ## Plans
 
 - Parse and validate integer arithmetic and bitwise
@@ -158,4 +151,6 @@ values, ranges, and arrays.
 - Generate `From<repr>` for range-based enums whose mappings cover every value
   in the representation. Non-exhaustive mappings would continue to use
   `TryFrom<repr>`.
-- Add a possibility to modify the Value that is used in `as` casts: e.g submacro `#[default = 15]`
+- Add a way to configure the value used in `as` casts, for example with a
+  submacro such as `#[default = 15]`.
+-->

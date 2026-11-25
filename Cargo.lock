@@ -6,13 +6,35 @@ version = 4
 name = "better_enums"
 version = "0.2.0"
 dependencies = [
- "better_enums_derive",
+ "better_enums_derive 0.2.0",
  "trybuild",
+]
+
+[[package]]
+name = "better_enums"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "105656bb4f10414f6624b0e453471d3b145719fb6d81bf489abba61ed88a830b"
+dependencies = [
+ "better_enums_derive 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "better_enums_derive"
 version = "0.2.0"
+dependencies = [
+ "better_enums 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "better_enums_derive"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a230864d08867fc65e7c337bcf402688096a6818fd2dd23ca6756f903d6917e1"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
