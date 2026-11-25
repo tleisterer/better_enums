@@ -1,4 +1,4 @@
-#![allow(clippy::all, unused)]
+#![allow(clippy::all, warnings)]
 
 use better_enums::{
     better_enums,

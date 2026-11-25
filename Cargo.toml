@@ -12,6 +12,9 @@ categories = ["rust-patterns"]
 [dependencies]
 better_enums_derive = { version = "0.2.0", path = "better_enums_derive" }
 
+[features]
+rename = ["better_enums_derive/rename"]
+
 [dev-dependencies]
 trybuild = "1.0"
 

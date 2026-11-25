@@ -234,19 +234,22 @@ impl RangeValue {
             .unwrap_or(domain.max);
 
         if let Some(expr) = &start
-            && !start_value.validate(&domain) {
-                return Err(syn::Error::new_spanned(
-                    expr,
-                    "better_enums: value is outside the repr range",
-                ));
-            }
+            && !start_value.validate(&domain)
+        {
+            return Err(syn::Error::new_spanned(
+                expr,
+                "better_enums: value is outside the repr range",
+            ));
+        }
+
         if let Some(expr) = &end
-            && !end_value.validate(&domain) {
-                return Err(syn::Error::new_spanned(
-                    expr,
-                    "better_enums: value is outside the repr range",
-                ));
-            }
+            && !end_value.validate(&domain)
+        {
+            return Err(syn::Error::new_spanned(
+                expr,
+                "better_enums: value is outside the repr range",
+            ));
+        }
 
         let upper = if end.is_some() && matches!(range.limits, RangeLimits::HalfOpen(_)) {
             match end_value {

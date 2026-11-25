@@ -2,9 +2,30 @@ mod bitflags;
 mod range;
 
 use proc_macro2::TokenStream;
+use quote::quote;
 use syn::{Ident, Variant};
 
-use crate::{Domain, model::VariantMapping};
+use crate::model::{Domain, VariantMapping};
+
+#[cfg(feature = "rename")]
+pub(crate) fn get_crate_name() -> TokenStream {
+    use proc_macro_crate::{FoundCrate, crate_name};
+    let krate = crate_name("better_enums")
+.expect("Don't use better_enums_derive directly: use better_enums instead");
+
+    match krate {
+FoundCrate::Itself => quote! { ::better_enums }
+        FoundCrate::Name(name) => {
+            let ident = Ident::new(&name, proc_macro2::Span::call_site());
+            quote! { ::#ident }
+        }
+    }
+}
+
+#[cfg(not(feature = "rename"))]
+pub(crate) fn get_crate_name() -> TokenStream {
+    quote! { ::better_enums }
+}
 
 pub(crate) trait Setting {
     fn validate(

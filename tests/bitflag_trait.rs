@@ -1,5 +1,4 @@
-#![allow(clippy::all, unused)]
-
+#![allow(clippy::all, warnings)]
 use std::ops::BitOr;
 
 use better_enums::flags::{Bit, Bitflags, ExhaustiveBit, FromBits};
