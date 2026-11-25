@@ -122,14 +122,6 @@ assert!(flags.contains(ExhaustiveFlags::One));
 assert_eq!(flags.value(), 0b0000_0011);
 ```
 
-## Validation
-
-The macro rejects missing or non-integer representations, variants with data,
-generic enums, invalid or out-of-range values, empty or reversed ranges,
-overlapping mappings, and exhausted implicit values. Bitflags additionally
-reject signed representations, zero or non-power-of-two values, duplicate
-values, ranges, and arrays.
-
 ## Features
 - default: none
 
